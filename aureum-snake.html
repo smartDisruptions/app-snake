@@ -1002,6 +1002,8 @@ function gameOver() {
   }
   playSound('gameover');
   vibrate([50, 30, 100]);
+  document.getElementById('playBtn').style.display = '';
+  document.getElementById('pauseBtn').style.display = 'none';
   showOverlay('gameover', isNewRecord);
 }
 
@@ -1110,6 +1112,8 @@ function showMenu() {
 function showGameplay() {
   menuScreen.style.display = 'none';
   gameScreen.style.display = 'flex';
+  document.getElementById('playBtn').style.display = 'none';
+  document.getElementById('pauseBtn').style.display = '';
 }
 
 // Main game loop

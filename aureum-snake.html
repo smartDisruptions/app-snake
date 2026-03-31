@@ -770,6 +770,25 @@
   </div>
 
 <script>
+// DOM references
+const board = document.getElementById('gameBoard');
+const scoreEl = document.getElementById('scoreValue');
+const recordEl = document.getElementById('recordValue');
+const chainEl = document.getElementById('chainValue');
+const rankFill = document.getElementById('rankFill');
+const rankTitle = document.getElementById('rankTitle');
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlayTitle');
+const overlaySubtitle = document.getElementById('overlaySubtitle');
+const overlayScore = document.getElementById('overlayScore');
+const overlayRecord = document.getElementById('overlayRecord');
+const overlayBtnPrimary = document.getElementById('overlayBtnPrimary');
+const overlayBtnSecondary = document.getElementById('overlayBtnSecondary');
+const menuScreen = document.getElementById('menuScreen');
+const gameScreen = document.getElementById('gameScreen');
+const menuRecord = document.getElementById('menuRecord');
+const soundBtn = document.getElementById('soundBtn');
+
 // Constants
 const GRID = 18;
 const INITIAL_LENGTH = 3;
@@ -916,15 +935,106 @@ function returnToMenu() {
   showMenu();
 }
 
-// Placeholder callbacks — implemented in Task 3 (rendering)
-function onEatFood() {}
-function onLevelUp() {}
-function renderAll() {}
-function updateUI() {}
-function showOverlay(type, isNewRecord) {}
-function hideOverlay() {}
-function showMenu() {}
-function showGameplay() {}
+// Rendering and UI callbacks
+function onEatFood() {
+  scoreEl.style.transform = 'scale(1.15)';
+  setTimeout(() => { scoreEl.style.transform = 'scale(1)'; }, 150);
+  // playSound('eat') and vibrate(30) will be added in Task 5
+}
+
+function onLevelUp() {
+  rankFill.style.opacity = '1';
+  rankFill.style.boxShadow = '0 0 16px rgba(212, 169, 76, 0.6)';
+  setTimeout(() => {
+    rankFill.style.opacity = '';
+    rankFill.style.boxShadow = '';
+  }, 400);
+  rankTitle.style.transform = 'scale(1.3)';
+  setTimeout(() => { rankTitle.style.transform = 'scale(1)'; }, 300);
+  // playSound('levelup') will be added in Task 5
+}
+
+function renderAll() {
+  board.querySelectorAll('.snake-segment, .food').forEach(el => el.remove());
+  const cell = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
+
+  snake.forEach((seg, i) => {
+    const el = document.createElement('div');
+    const type = i === 0 ? 'head' : i === snake.length - 1 ? 'tail' : 'body';
+    el.className = 'snake-segment ' + type;
+    el.style.left = seg.x * cell + 'px';
+    el.style.top = seg.y * cell + 'px';
+    const inner = document.createElement('div');
+    inner.className = 'gem';
+    if (type === 'body') {
+      inner.style.opacity = String(1 - (i / snake.length) * 0.5);
+    }
+    el.appendChild(inner);
+    board.appendChild(el);
+  });
+
+  const foodEl = document.createElement('div');
+  foodEl.className = 'food';
+  foodEl.style.left = food.x * cell + 'px';
+  foodEl.style.top = food.y * cell + 'px';
+  const ruby = document.createElement('div');
+  ruby.className = 'ruby';
+  foodEl.appendChild(ruby);
+  board.appendChild(foodEl);
+}
+
+function updateUI() {
+  scoreEl.textContent = score.toLocaleString('en-US');
+  recordEl.textContent = highScore.toLocaleString('en-US');
+  chainEl.textContent = snake.length.toLocaleString('en-US');
+  const progress = (foodEaten % FOOD_PER_LEVEL) / FOOD_PER_LEVEL * 100;
+  rankFill.style.width = progress + '%';
+  rankTitle.textContent = toRoman(level);
+}
+
+function showOverlay(type, isNewRecord) {
+  if (type === 'pause') {
+    overlayTitle.textContent = 'PAUSED';
+    overlaySubtitle.textContent = 'TAP TO RESUME';
+    overlayScore.style.display = 'none';
+    overlayRecord.style.display = 'none';
+    overlayBtnPrimary.textContent = 'RESUME';
+    overlayBtnSecondary.textContent = 'QUIT';
+    overlayBtnPrimary.onclick = resumeGame;
+    overlayBtnSecondary.onclick = returnToMenu;
+  } else {
+    overlayTitle.textContent = 'GAME OVER';
+    overlaySubtitle.textContent = '';
+    overlayScore.textContent = score.toLocaleString('en-US');
+    overlayScore.style.display = 'block';
+    overlayRecord.style.display = isNewRecord ? 'block' : 'none';
+    overlayRecord.textContent = 'NEW RECORD';
+    if (isNewRecord) overlayRecord.classList.add('pulse');
+    overlayBtnPrimary.textContent = 'PLAY AGAIN';
+    overlayBtnSecondary.textContent = 'MENU';
+    overlayBtnPrimary.onclick = startGame;
+    overlayBtnSecondary.onclick = returnToMenu;
+  }
+  overlay.classList.add('visible');
+}
+
+function hideOverlay() {
+  overlay.classList.remove('visible');
+  overlayRecord.classList.remove('pulse');
+}
+
+function showMenu() {
+  menuRecord.textContent = 'Record: ' + highScore.toLocaleString('en-US');
+  menuScreen.style.display = 'flex';
+  gameScreen.style.display = 'none';
+  overlay.classList.remove('visible');
+  board.querySelectorAll('.snake-segment, .food').forEach(el => el.remove());
+}
+
+function showGameplay() {
+  menuScreen.style.display = 'none';
+  gameScreen.style.display = 'flex';
+}
 
 // Main game loop
 function gameLoop(timestamp) {
@@ -946,6 +1056,8 @@ function gameLoop(timestamp) {
 }
 
 requestAnimationFrame(gameLoop);
+
+showMenu();
 </script>
 </body>
 </html>

@@ -789,6 +789,19 @@ const gameScreen = document.getElementById('gameScreen');
 const menuRecord = document.getElementById('menuRecord');
 const soundBtn = document.getElementById('soundBtn');
 
+// Audio
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('aureum-snake-sound') !== 'off';
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
 // Constants
 const GRID = 18;
 const INITIAL_LENGTH = 3;
@@ -815,6 +828,66 @@ let tickAccumulator = 0;
 function toRoman(num) {
   const numerals = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   return numerals[num] || String(num);
+}
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+
+  if (type === 'eat') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(900, audioCtx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.12);
+  } else if (type === 'levelup') {
+    const notes = [523, 659, 784];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const start = audioCtx.currentTime + i * 0.09;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.12, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.08);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(start);
+      osc.stop(start + 0.08);
+    });
+  } else if (type === 'gameover') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.4);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+  } else if (type === 'click') {
+    const bufferSize = audioCtx.sampleRate * 0.015;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.08;
+    }
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start();
+  }
+}
+
+function vibrate(pattern) {
+  if (soundEnabled && navigator.vibrate) {
+    navigator.vibrate(pattern);
+  }
 }
 
 // Game initialization
@@ -927,6 +1000,8 @@ function gameOver() {
     highScore = score;
     localStorage.setItem('aureum-snake-highscore', String(highScore));
   }
+  playSound('gameover');
+  vibrate([50, 30, 100]);
   showOverlay('gameover', isNewRecord);
 }
 
@@ -939,7 +1014,8 @@ function returnToMenu() {
 function onEatFood() {
   scoreEl.style.transform = 'scale(1.15)';
   setTimeout(() => { scoreEl.style.transform = 'scale(1)'; }, 150);
-  // playSound('eat') and vibrate(30) will be added in Task 5
+  playSound('eat');
+  vibrate(30);
 }
 
 function onLevelUp() {
@@ -951,7 +1027,7 @@ function onLevelUp() {
   }, 400);
   rankTitle.style.transform = 'scale(1.3)';
   setTimeout(() => { rankTitle.style.transform = 'scale(1)'; }, 300);
-  // playSound('levelup') will be added in Task 5
+  playSound('levelup');
 }
 
 function renderAll() {
@@ -1073,6 +1149,8 @@ document.querySelectorAll('.ctrl-btn[data-dir]').forEach(btn => {
     const dir = dirMap[btn.dataset.dir];
     if (dir && gameState === 'playing') {
       setDirection(dir.x, dir.y);
+      playSound('click');
+      vibrate(10);
     }
   }
   btn.addEventListener('touchstart', handlePress, { passive: false });
@@ -1115,6 +1193,20 @@ document.addEventListener('visibilitychange', () => {
     pauseGame();
   }
 });
+
+// Sound toggle
+function updateSoundIcon() {
+  soundBtn.style.opacity = soundEnabled ? '1' : '0.3';
+}
+
+soundBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('aureum-snake-sound', soundEnabled ? 'on' : 'off');
+  updateSoundIcon();
+  ensureAudioCtx();
+});
+
+updateSoundIcon();
 
 showMenu();
 </script>

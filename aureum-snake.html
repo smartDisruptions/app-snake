@@ -653,7 +653,7 @@
           <span class="ornament-diamond"></span>
           <span class="ornament-line"></span>
         </div>
-        <div class="title">AUREUM</div>
+        <div class="title">SNAKE</div>
         <div class="subtitle">SERPENTIS LUDUS</div>
       </div>
 
@@ -971,6 +971,7 @@ function setDirection(x, y) {
 function startGame() {
   initGame();
   gameState = 'playing';
+  hideOverlay();
   lastTick = performance.now();
   showGameplay();
   renderAll();

@@ -1057,6 +1057,65 @@ function gameLoop(timestamp) {
 
 requestAnimationFrame(gameLoop);
 
+// === INPUT CONTROLS ===
+
+// D-pad button events
+const dirMap = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 }
+};
+
+document.querySelectorAll('.ctrl-btn[data-dir]').forEach(btn => {
+  function handlePress(e) {
+    e.preventDefault();
+    const dir = dirMap[btn.dataset.dir];
+    if (dir && gameState === 'playing') {
+      setDirection(dir.x, dir.y);
+    }
+  }
+  btn.addEventListener('touchstart', handlePress, { passive: false });
+  btn.addEventListener('mousedown', handlePress);
+});
+
+// Keyboard controls
+document.addEventListener('keydown', (e) => {
+  const key = e.key;
+  if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+    e.preventDefault();
+    const keyDir = {
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 }
+    };
+    if (gameState === 'playing') {
+      setDirection(keyDir[key].x, keyDir[key].y);
+    }
+  } else if (key === ' ') {
+    e.preventDefault();
+    if (gameState === 'playing') pauseGame();
+    else if (gameState === 'paused') resumeGame();
+  } else if (key === 'Enter') {
+    if (gameState === 'menu' || gameState === 'gameover') startGame();
+  }
+});
+
+// Play and pause button clicks
+document.getElementById('menuPlayBtn').addEventListener('click', startGame);
+document.getElementById('playBtn').addEventListener('click', startGame);
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  if (gameState === 'playing') pauseGame();
+});
+
+// Auto-pause on tab/app switch
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && gameState === 'playing') {
+    pauseGame();
+  }
+});
+
 showMenu();
 </script>
 </body>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>蛇 — Zen Garden Snake</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Noto+Sans+JP:wght@100;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #1a1a18;
+    --stone: #2c2c28;
+    --sand: #f5f0e8;
+    --sand-dark: #e8e0d0;
+    --rice: #faf7f0;
+    --bamboo: #6b7c5e;
+    --bamboo-dark: #4a5840;
+    --rust: #c4553a;
+    --text-ink: #2a2a26;
+    --text-faded: rgba(42, 42, 38, 0.35);
+    --cell: 18px;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--sand);
+    color: var(--text-ink);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .paper-texture {
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' stitchTiles='stitch' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f5f0e8' surfaceScale='1.5' result='light'%3E%3CfeDistantLight azimuth='45' elevation='55'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)'/%3E%3C/svg%3E");
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ink-wash {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(42, 42, 38, 0.03), transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .ink-wash.top { width: 300px; height: 300px; top: -80px; right: -60px; }
+  .ink-wash.bottom { width: 400px; height: 250px; bottom: -40px; left: -100px; opacity: 0.7; }
+
+  .app {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px env(safe-area-inset-bottom, 20px);
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(42, 42, 38, 0.08);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: inkFade 1.2s ease-out 0.3s forwards;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .kanji {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 100;
+    font-size: 42px;
+    line-height: 1;
+    color: var(--text-ink);
+    opacity: 0.8;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-ink);
+  }
+
+  .brand-sub {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-faded);
+  }
+
+  .season-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 12px;
+    color: var(--bamboo);
+    opacity: 0.7;
+  }
+
+  .score-panel {
+    display: flex;
+    align-items: stretch;
+    gap: 1px;
+    background: rgba(42, 42, 38, 0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: inkFade 1.2s ease-out 0.5s forwards;
+  }
+
+  .score-item {
+    flex: 1;
+    padding: 14px 16px;
+    background: var(--sand);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .score-item.active {
+    background: var(--rice);
+  }
+
+  .score-title {
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-faded);
+  }
+
+  .score-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--text-ink);
+  }
+
+  .score-item.active .score-num {
+    color: var(--bamboo-dark);
+  }
+
+  .game-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: inkFade 1.5s ease-out 0.7s forwards;
+    min-height: 0;
+  }
+
+  .game-frame {
+    position: relative;
+    padding: 12px;
+    background: var(--rice);
+    border: 1px solid rgba(42, 42, 38, 0.08);
+  }
+
+  .corner-mark {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: rgba(42, 42, 38, 0.15);
+    border-style: solid;
+    border-width: 0;
+  }
+
+  .corner-mark.tl { top: 4px; left: 4px; border-top-width: 1px; border-left-width: 1px; }
+  .corner-mark.tr { top: 4px; right: 4px; border-top-width: 1px; border-right-width: 1px; }
+  .corner-mark.bl { bottom: 4px; left: 4px; border-bottom-width: 1px; border-left-width: 1px; }
+  .corner-mark.br { bottom: 4px; right: 4px; border-bottom-width: 1px; border-right-width: 1px; }
+
+  .game-board {
+    position: relative;
+    width: calc(18 * var(--cell));
+    height: calc(18 * var(--cell));
+    background: var(--sand);
+    border: 1px solid rgba(42, 42, 38, 0.06);
+  }
+
+  .sand-lines {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(var(--cell) - 1px),
+      rgba(42, 42, 38, 0.03) calc(var(--cell) - 1px),
+      rgba(42, 42, 38, 0.03) var(--cell)
+    );
+    pointer-events: none;
+  }
+
+  .snake-segment {
+    position: absolute;
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dot {
+    border-radius: 3px;
+    background: var(--ink);
+    transition: all 0.12s ease;
+  }
+
+  .snake-segment.head .dot {
+    width: calc(var(--cell) - 2px);
+    height: calc(var(--cell) - 2px);
+    border-radius: 4px;
+    background: var(--text-ink);
+    box-shadow: 1px 2px 4px rgba(26, 26, 24, 0.15);
+  }
+
+  .snake-segment.body .dot {
+    width: calc(var(--cell) - 4px);
+    height: calc(var(--cell) - 4px);
+    border-radius: 3px;
+  }
+
+  .snake-segment.tail .dot {
+    width: calc(var(--cell) - 8px);
+    height: calc(var(--cell) - 8px);
+    border-radius: 50%;
+    opacity: 0.3;
+  }
+
+  .food {
+    position: absolute;
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hanko {
+    width: calc(var(--cell) - 4px);
+    height: calc(var(--cell) - 4px);
+    border-radius: 2px;
+    background: var(--rust);
+    opacity: 0.85;
+    box-shadow: 0 1px 3px rgba(196, 85, 58, 0.25);
+    animation: hankoBreath 3s ease-in-out infinite;
+  }
+
+  @keyframes hankoBreath {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.08); opacity: 0.95; }
+  }
+
+  .ink-splash {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(42, 42, 38, 0.025), transparent 70%);
+    pointer-events: none;
+  }
+
+  .movement-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 12px;
+    opacity: 0;
+    animation: inkFade 1.2s ease-out 0.85s forwards;
+  }
+
+  .movement-label {
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-faded);
+    white-space: nowrap;
+  }
+
+  .movement-dots {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .movement-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(42, 42, 38, 0.06);
+  }
+
+  .movement-dot.filled {
+    background: var(--bamboo);
+    opacity: 0.6;
+  }
+
+  .movement-dot.filled.active {
+    opacity: 1;
+  }
+
+  .controls {
+    padding: 16px 0 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    animation: inkFade 1.2s ease-out 1s forwards;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .ctrl-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 2px;
+    background: var(--rice);
+    border: 1px solid rgba(42, 42, 38, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-faded);
+  }
+
+  .ctrl-btn:active {
+    background: var(--sand-dark);
+    transform: scale(0.94);
+    color: var(--text-ink);
+  }
+
+  .ctrl-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .ctrl-btn.spacer {
+    visibility: hidden;
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    opacity: 0;
+    animation: inkFade 1.2s ease-out 1.1s forwards;
+  }
+
+  .play-btn {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    padding: 10px 32px;
+    background: var(--text-ink);
+    color: var(--sand);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .play-btn:active {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+
+  .mode-toggle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--text-faded);
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 8px;
+    transition: color 0.3s;
+  }
+
+  .mode-toggle:active {
+    color: var(--bamboo);
+  }
+
+  @keyframes inkFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-height: 700px) {
+    .score-panel { margin-bottom: 14px; }
+    .score-item { padding: 10px 12px; }
+    .score-num { font-size: 22px; }
+    .ctrl-btn { width: 56px; height: 56px; }
+    .controls { padding: 10px 0 4px; }
+    .movement-bar { margin: 10px 0 8px; }
+  }
+
+  @media (min-width: 421px) {
+    :root { --cell: 22px; }
+  }
+</style>
+</head>
+<body>
+  <div class="paper-texture"></div>
+  <div class="ink-wash top"></div>
+  <div class="ink-wash bottom"></div>
+
+  <div class="app">
+    <div class="header">
+      <div class="brand">
+        <span class="kanji">蛇</span>
+        <div class="brand-text">
+          <span class="brand-name">Hebi</span>
+          <span class="brand-sub">ヘビ &bull; snake</span>
+        </div>
+      </div>
+      <span class="season-mark">春 — spring</span>
+    </div>
+
+    <div class="score-panel">
+      <div class="score-item active">
+        <span class="score-title">Score</span>
+        <span class="score-num">2,450</span>
+      </div>
+      <div class="score-item">
+        <span class="score-title">Highest</span>
+        <span class="score-num">8,120</span>
+      </div>
+      <div class="score-item">
+        <span class="score-title">Length</span>
+        <span class="score-num">17</span>
+      </div>
+    </div>
+
+    <div class="game-container">
+      <div class="game-frame">
+        <div class="corner-mark tl"></div>
+        <div class="corner-mark tr"></div>
+        <div class="corner-mark bl"></div>
+        <div class="corner-mark br"></div>
+        <div class="game-board" id="gameBoard">
+          <div class="sand-lines"></div>
+          <div class="ink-splash" style="top: 20px; left: 200px;"></div>
+          <div class="ink-splash" style="bottom: 40px; right: 30px; width: 50px; height: 50px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="movement-bar">
+      <span class="movement-label">Pace</span>
+      <div class="movement-dots">
+        <div class="movement-dot filled active"></div>
+        <div class="movement-dot filled active"></div>
+        <div class="movement-dot filled active"></div>
+        <div class="movement-dot filled active"></div>
+        <div class="movement-dot filled"></div>
+        <div class="movement-dot filled"></div>
+        <div class="movement-dot"></div>
+        <div class="movement-dot"></div>
+        <div class="movement-dot"></div>
+        <div class="movement-dot"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="controls-row">
+        <div class="ctrl-btn spacer"></div>
+        <button class="ctrl-btn" aria-label="Up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+        <div class="ctrl-btn spacer"></div>
+      </div>
+      <div class="controls-row">
+        <button class="ctrl-btn" aria-label="Left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="ctrl-btn" aria-label="Down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="ctrl-btn" aria-label="Right">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button class="mode-toggle">Meditation mode</button>
+      <button class="play-btn">Begin</button>
+    </div>
+  </div>
+
+  <script>
+    const board = document.getElementById('gameBoard');
+    const cell = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
+
+    const snakePositions = [
+      {x:10,y:7},{x:9,y:7},{x:8,y:7},{x:7,y:7},{x:6,y:7},
+      {x:6,y:8},{x:6,y:9},{x:7,y:9},{x:8,y:9},{x:8,y:10},
+      {x:8,y:11},{x:9,y:11},{x:10,y:11},{x:11,y:11},{x:11,y:10},
+      {x:11,y:9},{x:12,y:9}
+    ];
+
+    const foodPos = {x: 14, y: 5};
+
+    function createEl(className, parent) {
+      const el = document.createElement('div');
+      el.className = className;
+      parent.appendChild(el);
+      return el;
+    }
+
+    snakePositions.forEach(function(pos, i) {
+      const type = i === 0 ? 'head' : i === snakePositions.length - 1 ? 'tail' : 'body';
+      const el = createEl('snake-segment ' + type, board);
+      el.style.left = pos.x * cell + 'px';
+      el.style.top = pos.y * cell + 'px';
+      const dot = createEl('dot', el);
+      if (type === 'body') {
+        dot.style.opacity = String(1 - (i / snakePositions.length) * 0.6);
+      }
+    });
+
+    const foodEl = createEl('food', board);
+    foodEl.style.left = foodPos.x * cell + 'px';
+    foodEl.style.top = foodPos.y * cell + 'px';
+    createEl('hanko', foodEl);
+  </script>
+</body>
+</html>

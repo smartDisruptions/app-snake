@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Existing Snake Game Designs</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@100;300&family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Outfit:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0c0c14;
+    color: #e0e0e8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 40px 24px 60px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 8px;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 48px;
+    color: #fff;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .design-card {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.3s ease;
+    background: #14141e;
+  }
+
+  .design-card:hover {
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+
+  /* ===== MOCKUP CONTAINERS ===== */
+  .mockup-phone {
+    width: 100%;
+    aspect-ratio: 9/15;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .design-info {
+    padding: 20px 24px 24px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .design-number {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 6px;
+  }
+
+  .design-name { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .design-desc { font-size: 13px; color: rgba(255,255,255,0.35); line-height: 1.6; }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 12px;
+    border: 1px solid;
+  }
+
+  /* ==============================
+     DESIGN 1 — NEON NOIR
+     ============================== */
+  .neon-phone {
+    background: #06060e;
+    padding: 14px;
+  }
+
+  .neon-phone .n-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,245,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 100%, rgba(255,0,170,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .neon-phone .n-scanlines {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+  }
+
+  .neon-phone .n-header {
+    position: relative; z-index: 1;
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 12px;
+  }
+
+  .neon-phone .n-logo {
+    font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 14px;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, #00f5ff, #ff00aa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .neon-phone .n-icons { display: flex; gap: 6px; }
+  .neon-phone .n-icon {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .neon-phone .n-stats {
+    position: relative; z-index: 1;
+    display: flex; gap: 6px; margin-bottom: 10px;
+  }
+
+  .neon-phone .n-stat {
+    flex: 1; padding: 8px 10px; border-radius: 10px;
+    background: rgba(13,13,26,0.7); border: 1px solid rgba(255,255,255,0.06);
+    position: relative; overflow: hidden;
+  }
+
+  .neon-phone .n-stat::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,245,255,0.3), transparent);
+  }
+
+  .neon-phone .n-stat.primary::before {
+    background: linear-gradient(90deg, transparent, #00f5ff, transparent);
+    box-shadow: 0 0 12px rgba(0,245,255,0.3);
+  }
+
+  .neon-phone .n-stat-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 7px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: rgba(232,232,240,0.35); margin-bottom: 3px;
+  }
+
+  .neon-phone .n-stat-val {
+    font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 15px;
+    color: #e8e8f0;
+  }
+
+  .neon-phone .n-stat.primary .n-stat-val {
+    background: linear-gradient(135deg, #00f5ff, #00d4ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .neon-phone .n-board-wrap {
+    position: relative; z-index: 1;
+    padding: 2px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(0,245,255,0.15), rgba(255,0,170,0.1), rgba(139,92,246,0.1));
+    margin: 0 auto;
+  }
+
+  .neon-phone .n-board {
+    width: 100%; aspect-ratio: 1;
+    background: #0d0d1a; border-radius: 12px;
+    position: relative; overflow: hidden;
+  }
+
+  .neon-phone .n-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.04) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  .n-snake-seg {
+    position: absolute; width: 16px; height: 16px; border-radius: 5px;
+  }
+
+  .n-snake-head {
+    background: linear-gradient(135deg, #00f5ff, #00e5ff);
+    box-shadow: 0 0 12px rgba(0,245,255,0.7), 0 0 30px rgba(0,245,255,0.3);
+  }
+
+  .n-snake-body {
+    background: linear-gradient(135deg, #00f5ff, #8b5cf6);
+  }
+
+  .n-food {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background: #ff00aa;
+    box-shadow: 0 0 10px rgba(255,0,170,0.6), 0 0 25px rgba(255,0,170,0.3);
+  }
+
+  .neon-phone .n-level {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 8px;
+    margin: 10px 0 8px;
+  }
+
+  .neon-phone .n-level-label {
+    font-family: 'Orbitron', sans-serif; font-size: 7px;
+    letter-spacing: 2px; color: rgba(232,232,240,0.35);
+  }
+
+  .neon-phone .n-level-track {
+    flex: 1; height: 2px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden;
+  }
+
+  .neon-phone .n-level-fill {
+    height: 100%; width: 65%; border-radius: 2px;
+    background: linear-gradient(90deg, #00f5ff, #ff00aa);
+    box-shadow: 0 0 8px rgba(0,245,255,0.4);
+  }
+
+  .neon-phone .n-level-num {
+    font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; color: #00f5ff;
+  }
+
+  .neon-phone .n-controls {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0;
+  }
+
+  .neon-phone .n-ctrl-row { display: flex; gap: 4px; }
+
+  .neon-phone .n-ctrl-btn {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(13,13,26,0.7); border: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(232,232,240,0.35); font-size: 14px;
+  }
+
+  .neon-phone .n-ctrl-btn.spacer { visibility: hidden; }
+
+  .neon-phone .n-bottom {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 6px;
+  }
+
+  .neon-phone .n-play {
+    padding: 7px 20px; border-radius: 8px;
+    background: linear-gradient(135deg, #00f5ff, #00b8d4);
+    font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 2px; color: #06060e; border: none;
+  }
+
+  .neon-phone .n-pause {
+    padding: 7px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(232,232,240,0.35); font-size: 12px;
+  }
+
+  .card-1 .design-name { color: #00f5ff; }
+  .card-1 .tag { color: #00f5ff; border-color: rgba(0,245,255,0.25); background: rgba(0,245,255,0.06); }
+
+  /* ==============================
+     DESIGN 2 — ZEN GARDEN
+     ============================== */
+  .zen-phone {
+    background: #f5f0e8;
+    padding: 16px;
+    color: #2a2a26;
+  }
+
+  .zen-phone .z-texture {
+    position: absolute; inset: 0; opacity: 0.15; pointer-events: none;
+    background: repeating-linear-gradient(45deg, rgba(42,42,38,0.02) 0px, transparent 2px, transparent 8px);
+  }
+
+  .zen-phone .z-header {
+    position: relative; z-index: 1;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding-bottom: 14px; border-bottom: 1px solid rgba(42,42,38,0.08); margin-bottom: 14px;
+  }
+
+  .zen-phone .z-brand { display: flex; align-items: baseline; gap: 8px; }
+
+  .zen-phone .z-kanji {
+    font-family: 'Noto Sans JP', sans-serif; font-weight: 100; font-size: 32px;
+    line-height: 1; color: #2a2a26; opacity: 0.8;
+  }
+
+  .zen-phone .z-brand-name {
+    font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 11px;
+    letter-spacing: 3px; text-transform: uppercase; color: #2a2a26;
+  }
+
+  .zen-phone .z-brand-sub {
+    font-size: 7px; letter-spacing: 1.5px; color: rgba(42,42,38,0.35);
+  }
+
+  .zen-phone .z-season {
+    font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+    font-size: 10px; color: #6b7c5e; opacity: 0.7;
+  }
+
+  .zen-phone .z-scores {
+    position: relative; z-index: 1;
+    display: flex; gap: 1px; background: rgba(42,42,38,0.06); border-radius: 2px;
+    overflow: hidden; margin-bottom: 14px;
+  }
+
+  .zen-phone .z-score-item {
+    flex: 1; padding: 10px 12px; background: #f5f0e8;
+  }
+
+  .zen-phone .z-score-item.active { background: #faf7f0; }
+
+  .zen-phone .z-score-label {
+    font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: rgba(42,42,38,0.35);
+    margin-bottom: 2px;
+  }
+
+  .zen-phone .z-score-num {
+    font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 20px;
+    line-height: 1; color: #2a2a26;
+  }
+
+  .zen-phone .z-score-item.active .z-score-num { color: #4a5840; }
+
+  .zen-phone .z-frame {
+    position: relative; z-index: 1;
+    padding: 8px; background: #faf7f0; border: 1px solid rgba(42,42,38,0.08);
+    margin: 0 auto;
+  }
+
+  .zen-phone .z-corner {
+    position: absolute; width: 10px; height: 10px; border-color: rgba(42,42,38,0.12); border-style: solid; border-width: 0;
+  }
+
+  .zen-phone .z-corner.tl { top: 3px; left: 3px; border-top-width: 1px; border-left-width: 1px; }
+  .zen-phone .z-corner.tr { top: 3px; right: 3px; border-top-width: 1px; border-right-width: 1px; }
+  .zen-phone .z-corner.bl { bottom: 3px; left: 3px; border-bottom-width: 1px; border-left-width: 1px; }
+  .zen-phone .z-corner.br { bottom: 3px; right: 3px; border-bottom-width: 1px; border-right-width: 1px; }
+
+  .zen-phone .z-board {
+    width: 100%; aspect-ratio: 1; background: #f5f0e8;
+    border: 1px solid rgba(42,42,38,0.06); position: relative; overflow: hidden;
+  }
+
+  .zen-phone .z-sand-lines {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 17px, rgba(42,42,38,0.03) 17px, rgba(42,42,38,0.03) 18px);
+  }
+
+  .z-snake-seg {
+    position: absolute; width: 14px; height: 14px; border-radius: 3px; background: #2a2a26;
+  }
+
+  .z-snake-head {
+    width: 16px; height: 16px; border-radius: 4px; background: #2a2a26;
+    box-shadow: 1px 2px 4px rgba(26,26,24,0.15);
+  }
+
+  .z-food {
+    position: absolute; width: 14px; height: 14px; border-radius: 2px;
+    background: #c4553a; opacity: 0.85;
+    box-shadow: 0 1px 3px rgba(196,85,58,0.25);
+  }
+
+  .zen-phone .z-pace {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 8px; margin: 10px 0 8px;
+  }
+
+  .zen-phone .z-pace-label {
+    font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: rgba(42,42,38,0.35);
+  }
+
+  .zen-phone .z-dots { display: flex; gap: 3px; flex: 1; justify-content: flex-end; }
+
+  .zen-phone .z-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: rgba(42,42,38,0.06);
+  }
+
+  .zen-phone .z-dot.filled { background: #6b7c5e; opacity: 0.6; }
+  .zen-phone .z-dot.active { opacity: 1; }
+
+  .zen-phone .z-controls {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0;
+  }
+
+  .zen-phone .z-ctrl-row { display: flex; gap: 3px; }
+
+  .zen-phone .z-ctrl-btn {
+    width: 42px; height: 42px; border-radius: 2px;
+    background: #faf7f0; border: 1px solid rgba(42,42,38,0.08);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(42,42,38,0.3); font-size: 13px;
+  }
+
+  .zen-phone .z-ctrl-btn.spacer { visibility: hidden; }
+
+  .zen-phone .z-footer {
+    position: relative; z-index: 1;
+    display: flex; justify-content: space-between; align-items: center; padding-top: 8px;
+  }
+
+  .zen-phone .z-mode {
+    font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 10px;
+    color: rgba(42,42,38,0.3); background: none; border: none;
+  }
+
+  .zen-phone .z-begin {
+    font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 11px;
+    letter-spacing: 4px; text-transform: uppercase; padding: 8px 24px;
+    background: #2a2a26; color: #f5f0e8; border: none;
+  }
+
+  .card-2 .design-name { color: #6b7c5e; }
+  .card-2 .tag { color: #8a9e78; border-color: rgba(107,124,94,0.3); background: rgba(107,124,94,0.08); }
+
+  /* ==============================
+     DESIGN 3 — ART DECO
+     ============================== */
+  .deco-phone {
+    background: #0e0e12;
+    padding: 14px 16px;
+    color: rgba(248,244,235,0.85);
+  }
+
+  .deco-phone .d-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,169,76,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(212,169,76,0.04) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .deco-phone .d-line-top {
+    position: absolute; top: 0; left: 50%; width: 1px; height: 40px;
+    background: linear-gradient(to bottom, #d4a94c, transparent); opacity: 0.2;
+  }
+
+  .deco-phone .d-header {
+    position: relative; z-index: 1; text-align: center; padding-bottom: 14px;
+  }
+
+  .deco-phone .d-ornament {
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;
+  }
+
+  .deco-phone .d-orn-line {
+    width: 30px; height: 1px;
+    background: linear-gradient(90deg, transparent, #d4a94c, transparent); opacity: 0.4;
+  }
+
+  .deco-phone .d-diamond {
+    width: 5px; height: 5px; background: #d4a94c; transform: rotate(45deg); opacity: 0.5;
+  }
+
+  .deco-phone .d-title {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-size: 18px;
+    letter-spacing: 8px; color: #d4a94c;
+    text-shadow: 0 0 20px rgba(212,169,76,0.2);
+  }
+
+  .deco-phone .d-subtitle {
+    font-size: 7px; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(248,244,235,0.25); margin-top: 3px;
+  }
+
+  .deco-phone .d-scores {
+    position: relative; z-index: 1;
+    display: flex; border: 1px solid rgba(212,169,76,0.1); margin-bottom: 12px;
+    position: relative;
+  }
+
+  .deco-phone .d-score-corner-tl {
+    position: absolute; width: 6px; height: 6px; top: -1px; left: -1px;
+    border-top: 1px solid #d4a94c; border-left: 1px solid #d4a94c; opacity: 0.3;
+  }
+
+  .deco-phone .d-score-corner-br {
+    position: absolute; width: 6px; height: 6px; bottom: -1px; right: -1px;
+    border-bottom: 1px solid #d4a94c; border-right: 1px solid #d4a94c; opacity: 0.3;
+  }
+
+  .deco-phone .d-score-section {
+    flex: 1; padding: 10px 12px; text-align: center; position: relative;
+  }
+
+  .deco-phone .d-score-section.featured { background: rgba(212,169,76,0.04); }
+
+  .deco-phone .d-score-divider {
+    position: absolute; left: 0; top: 20%; bottom: 20%; width: 1px;
+    background: rgba(212,169,76,0.1);
+  }
+
+  .deco-phone .d-score-label {
+    font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(248,244,235,0.25); margin-bottom: 4px;
+  }
+
+  .deco-phone .d-score-val {
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px;
+    color: rgba(248,244,235,0.85);
+  }
+
+  .deco-phone .d-score-section.featured .d-score-val {
+    color: #d4a94c; text-shadow: 0 0 15px rgba(212,169,76,0.15);
+  }
+
+  .deco-phone .d-frame {
+    position: relative; z-index: 1;
+    padding: 3px;
+    background: linear-gradient(135deg, #d4a94c, #a07830, #d4a94c, #a07830);
+    background-size: 200% 200%;
+    animation: goldShimmer 6s ease-in-out infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes goldShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .deco-phone .d-frame-inner {
+    padding: 6px; background: #0e0e12;
+  }
+
+  .deco-phone .d-board {
+    width: 100%; aspect-ratio: 1; background: #141418;
+    position: relative; overflow: hidden;
+  }
+
+  .deco-phone .d-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(212,169,76,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212,169,76,0.03) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  .deco-phone .d-board-corner {
+    position: absolute; width: 20px; height: 20px; pointer-events: none; opacity: 0.08;
+  }
+
+  .deco-phone .d-board-corner.tl { top: 0; left: 0; border-top: 2px solid #d4a94c; border-left: 2px solid #d4a94c; }
+  .deco-phone .d-board-corner.tr { top: 0; right: 0; border-top: 2px solid #d4a94c; border-right: 2px solid #d4a94c; }
+  .deco-phone .d-board-corner.bl { bottom: 0; left: 0; border-bottom: 2px solid #d4a94c; border-left: 2px solid #d4a94c; }
+  .deco-phone .d-board-corner.br { bottom: 0; right: 0; border-bottom: 2px solid #d4a94c; border-right: 2px solid #d4a94c; }
+
+  .d-snake-seg {
+    position: absolute; width: 14px; height: 14px; border-radius: 3px;
+  }
+
+  .d-snake-head {
+    width: 16px; height: 16px; border-radius: 4px;
+    background: linear-gradient(135deg, #e8c878, #d4a94c, #a07830);
+    box-shadow: 0 0 8px rgba(212,169,76,0.4);
+  }
+
+  .d-snake-body {
+    background: linear-gradient(135deg, #d4a94c, #a07830);
+    box-shadow: 0 0 4px rgba(212,169,76,0.2);
+  }
+
+  .d-food {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background: linear-gradient(135deg, #d44, #7a2332);
+    box-shadow: 0 0 10px rgba(212,68,68,0.4), 0 0 25px rgba(212,68,68,0.15);
+  }
+
+  .deco-phone .d-rank {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 8px; margin: 10px 0 8px;
+  }
+
+  .deco-phone .d-rank-label {
+    font-family: 'Playfair Display', serif; font-style: italic; font-size: 9px;
+    color: #d4a94c; opacity: 0.6;
+  }
+
+  .deco-phone .d-rank-track {
+    flex: 1; height: 2px; background: rgba(212,169,76,0.08); overflow: hidden;
+  }
+
+  .deco-phone .d-rank-fill {
+    height: 100%; width: 65%;
+    background: linear-gradient(90deg, #a07830, #d4a94c);
+    box-shadow: 0 0 8px rgba(212,169,76,0.3);
+  }
+
+  .deco-phone .d-rank-title {
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 9px;
+    color: #d4a94c; letter-spacing: 2px;
+  }
+
+  .deco-phone .d-controls {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0;
+  }
+
+  .deco-phone .d-ctrl-row { display: flex; gap: 3px; }
+
+  .deco-phone .d-ctrl-btn {
+    width: 40px; height: 40px; background: #1a1a22;
+    border: 1px solid rgba(212,169,76,0.1);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(248,244,235,0.25); font-size: 13px; position: relative;
+  }
+
+  .deco-phone .d-ctrl-inner {
+    position: absolute; inset: 2px; border: 1px solid rgba(212,169,76,0.04);
+  }
+
+  .deco-phone .d-ctrl-btn.spacer { visibility: hidden; }
+
+  .deco-phone .d-bottom {
+    position: relative; z-index: 1;
+    display: flex; justify-content: space-between; align-items: center; padding-top: 6px;
+  }
+
+  .deco-phone .d-ghost-btn {
+    padding: 7px 16px; background: none;
+    border: 1px solid rgba(212,169,76,0.15);
+    font-family: 'Outfit', sans-serif; font-size: 9px; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(248,244,235,0.25);
+  }
+
+  .deco-phone .d-gold-btn {
+    padding: 7px 20px;
+    background: linear-gradient(135deg, #d4a94c, #a07830);
+    font-family: 'Outfit', sans-serif; font-size: 9px; font-weight: 400;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: #0e0e12; border: none;
+    box-shadow: 0 4px 15px rgba(212,169,76,0.25);
+  }
+
+  .card-3 .design-name { color: #d4a94c; }
+  .card-3 .tag { color: #d4a94c; border-color: rgba(212,169,76,0.25); background: rgba(212,169,76,0.06); }
+
+  @media (max-width: 1000px) {
+    .grid { grid-template-columns: 1fr; max-width: 420px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Current Mockups</h1>
+<p class="page-title">Your 3 Existing Snake Game Designs</p>
+
+<div class="grid">
+
+  <!-- ===== CARD 1: NEON NOIR ===== -->
+  <div class="design-card card-1">
+    <div class="mockup-phone neon-phone">
+      <div class="n-bg"></div>
+      <div class="n-scanlines"></div>
+      <div class="n-header">
+        <div class="n-logo">SERPENT</div>
+        <div class="n-icons"><div class="n-icon"></div><div class="n-icon"></div></div>
+      </div>
+      <div class="n-stats">
+        <div class="n-stat primary">
+          <div class="n-stat-label">Score</div>
+          <div class="n-stat-val">2,450</div>
+        </div>
+        <div class="n-stat">
+          <div class="n-stat-label">Best</div>
+          <div class="n-stat-val">8,120</div>
+        </div>
+        <div class="n-stat">
+          <div class="n-stat-label">Length</div>
+          <div class="n-stat-val">17</div>
+        </div>
+      </div>
+      <div class="n-board-wrap">
+        <div class="n-board">
+          <div class="n-grid"></div>
+          <div class="n-snake-seg n-snake-head" style="left:42%;top:36%;"></div>
+          <div class="n-snake-seg n-snake-body" style="left:36%;top:36%;opacity:0.7;"></div>
+          <div class="n-snake-seg n-snake-body" style="left:30%;top:36%;opacity:0.6;"></div>
+          <div class="n-snake-seg n-snake-body" style="left:24%;top:36%;opacity:0.5;"></div>
+          <div class="n-snake-seg n-snake-body" style="left:24%;top:42%;opacity:0.45;"></div>
+          <div class="n-snake-seg n-snake-body" style="left:24%;top:48%;opacity:0.4;"></div>
+          <div class="n-snake-seg n-snake-body" style="left:30%;top:48%;opacity:0.35;border-radius:50%;width:12px;height:12px;"></div>
+          <div class="n-food" style="left:65%;top:28%;"></div>
+        </div>
+      </div>
+      <div class="n-level">
+        <span class="n-level-label">LEVEL</span>
+        <div class="n-level-track"><div class="n-level-fill"></div></div>
+        <span class="n-level-num">07</span>
+      </div>
+      <div class="n-controls">
+        <div class="n-ctrl-row">
+          <div class="n-ctrl-btn spacer"></div>
+          <div class="n-ctrl-btn">&uarr;</div>
+          <div class="n-ctrl-btn spacer"></div>
+        </div>
+        <div class="n-ctrl-row">
+          <div class="n-ctrl-btn">&larr;</div>
+          <div class="n-ctrl-btn">&darr;</div>
+          <div class="n-ctrl-btn">&rarr;</div>
+        </div>
+      </div>
+      <div class="n-bottom">
+        <div class="n-pause">&#9208;</div>
+        <div class="n-play">PLAY</div>
+      </div>
+    </div>
+    <div class="design-info">
+      <div class="design-number">Design 01</div>
+      <div class="design-name">SERPENT &mdash; Neon Noir</div>
+      <div class="design-desc">Cyberpunk aesthetic with glowing cyan/magenta neon, glassmorphism cards, scanline overlays, and Orbitron typography.</div>
+      <span class="tag">Dark / Cyberpunk</span>
+    </div>
+  </div>
+
+  <!-- ===== CARD 2: ZEN GARDEN ===== -->
+  <div class="design-card card-2">
+    <div class="mockup-phone zen-phone">
+      <div class="z-texture"></div>
+      <div class="z-header">
+        <div class="z-brand">
+          <span class="z-kanji">蛇</span>
+          <div>
+            <div class="z-brand-name">Hebi</div>
+            <div class="z-brand-sub">ヘビ &bull; snake</div>
+          </div>
+        </div>
+        <span class="z-season">春 &mdash; spring</span>
+      </div>
+      <div class="z-scores">
+        <div class="z-score-item active">
+          <div class="z-score-label">Score</div>
+          <div class="z-score-num">2,450</div>
+        </div>
+        <div class="z-score-item">
+          <div class="z-score-label">Highest</div>
+          <div class="z-score-num">8,120</div>
+        </div>
+        <div class="z-score-item">
+          <div class="z-score-label">Length</div>
+          <div class="z-score-num">17</div>
+        </div>
+      </div>
+      <div class="z-frame">
+        <div class="z-corner tl"></div>
+        <div class="z-corner tr"></div>
+        <div class="z-corner bl"></div>
+        <div class="z-corner br"></div>
+        <div class="z-board">
+          <div class="z-sand-lines"></div>
+          <div class="z-snake-seg z-snake-head" style="left:46%;top:34%;"></div>
+          <div class="z-snake-seg" style="left:40%;top:34%;opacity:0.85;"></div>
+          <div class="z-snake-seg" style="left:34%;top:34%;opacity:0.7;"></div>
+          <div class="z-snake-seg" style="left:28%;top:34%;opacity:0.6;"></div>
+          <div class="z-snake-seg" style="left:28%;top:40%;opacity:0.5;"></div>
+          <div class="z-snake-seg" style="left:28%;top:46%;opacity:0.4;"></div>
+          <div class="z-snake-seg" style="left:34%;top:46%;opacity:0.3;border-radius:50%;width:10px;height:10px;"></div>
+          <div class="z-food" style="left:68%;top:24%;"></div>
+        </div>
+      </div>
+      <div class="z-pace">
+        <span class="z-pace-label">Pace</span>
+        <div class="z-dots">
+          <div class="z-dot filled active"></div>
+          <div class="z-dot filled active"></div>
+          <div class="z-dot filled active"></div>
+          <div class="z-dot filled active"></div>
+          <div class="z-dot filled"></div>
+          <div class="z-dot filled"></div>
+          <div class="z-dot"></div>
+          <div class="z-dot"></div>
+          <div class="z-dot"></div>
+          <div class="z-dot"></div>
+        </div>
+      </div>
+      <div class="z-controls">
+        <div class="z-ctrl-row">
+          <div class="z-ctrl-btn spacer"></div>
+          <div class="z-ctrl-btn">&uarr;</div>
+          <div class="z-ctrl-btn spacer"></div>
+        </div>
+        <div class="z-ctrl-row">
+          <div class="z-ctrl-btn">&larr;</div>
+          <div class="z-ctrl-btn">&darr;</div>
+          <div class="z-ctrl-btn">&rarr;</div>
+        </div>
+      </div>
+      <div class="z-footer">
+        <div class="z-mode">Meditation mode</div>
+        <div class="z-begin">Begin</div>
+      </div>
+    </div>
+    <div class="design-info">
+      <div class="design-number">Design 02</div>
+      <div class="design-name">蛇 &mdash; Zen Garden</div>
+      <div class="design-desc">Japanese minimalism with sand/ink palette, paper texture, Cormorant Garamond + Noto Sans JP, and hanko-styled food.</div>
+      <span class="tag">Light / Wabi-sabi</span>
+    </div>
+  </div>
+
+  <!-- ===== CARD 3: ART DECO ===== -->
+  <div class="design-card card-3">
+    <div class="mockup-phone deco-phone">
+      <div class="d-bg"></div>
+      <div class="d-line-top"></div>
+      <div class="d-header">
+        <div class="d-ornament">
+          <span class="d-orn-line"></span>
+          <span class="d-diamond"></span>
+          <span class="d-orn-line"></span>
+        </div>
+        <div class="d-title">AUREUM</div>
+        <div class="d-subtitle">Serpentis Ludus</div>
+      </div>
+      <div class="d-scores">
+        <div class="d-score-corner-tl"></div>
+        <div class="d-score-corner-br"></div>
+        <div class="d-score-section featured">
+          <div class="d-score-label">Score</div>
+          <div class="d-score-val">2,450</div>
+        </div>
+        <div class="d-score-section">
+          <div class="d-score-divider"></div>
+          <div class="d-score-label">Record</div>
+          <div class="d-score-val">8,120</div>
+        </div>
+        <div class="d-score-section">
+          <div class="d-score-divider"></div>
+          <div class="d-score-label">Chain</div>
+          <div class="d-score-val">17</div>
+        </div>
+      </div>
+      <div class="d-frame">
+        <div class="d-frame-inner">
+          <div class="d-board">
+            <div class="d-grid"></div>
+            <div class="d-board-corner tl"></div>
+            <div class="d-board-corner tr"></div>
+            <div class="d-board-corner bl"></div>
+            <div class="d-board-corner br"></div>
+            <div class="d-snake-seg d-snake-head" style="left:46%;top:34%;"></div>
+            <div class="d-snake-seg d-snake-body" style="left:40%;top:34%;opacity:0.85;"></div>
+            <div class="d-snake-seg d-snake-body" style="left:34%;top:34%;opacity:0.7;"></div>
+            <div class="d-snake-seg d-snake-body" style="left:28%;top:34%;opacity:0.6;"></div>
+            <div class="d-snake-seg d-snake-body" style="left:28%;top:40%;opacity:0.5;"></div>
+            <div class="d-snake-seg d-snake-body" style="left:28%;top:46%;opacity:0.4;"></div>
+            <div class="d-snake-seg d-snake-body" style="left:34%;top:46%;opacity:0.3;border-radius:50%;width:10px;height:10px;"></div>
+            <div class="d-food" style="left:68%;top:24%;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-rank">
+        <span class="d-rank-label">Rank</span>
+        <div class="d-rank-track"><div class="d-rank-fill"></div></div>
+        <span class="d-rank-title">VII</span>
+      </div>
+      <div class="d-controls">
+        <div class="d-ctrl-row">
+          <div class="d-ctrl-btn spacer"></div>
+          <div class="d-ctrl-btn"><span class="d-ctrl-inner"></span>&uarr;</div>
+          <div class="d-ctrl-btn spacer"></div>
+        </div>
+        <div class="d-ctrl-row">
+          <div class="d-ctrl-btn"><span class="d-ctrl-inner"></span>&larr;</div>
+          <div class="d-ctrl-btn"><span class="d-ctrl-inner"></span>&darr;</div>
+          <div class="d-ctrl-btn"><span class="d-ctrl-inner"></span>&rarr;</div>
+        </div>
+      </div>
+      <div class="d-bottom">
+        <div class="d-ghost-btn">Pause</div>
+        <div class="d-gold-btn">Play</div>
+      </div>
+    </div>
+    <div class="design-info">
+      <div class="design-number">Design 03</div>
+      <div class="design-name">AUREUM &mdash; Art Deco</div>
+      <div class="design-desc">Luxury gold-on-obsidian with shimmer borders, Playfair Display serif, diamond ornaments, and Roman numeral ranks.</div>
+      <span class="tag">Dark / Luxury</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

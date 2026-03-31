@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AUREUM — Art Deco Snake</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #d4a94c;
+    --gold-light: #e8c878;
+    --gold-dark: #a07830;
+    --cream: #f8f4eb;
+    --obsidian: #0e0e12;
+    --charcoal: #1a1a22;
+    --surface: #141418;
+    --burgundy: #7a2332;
+    --ruby: #d44444;
+    --text-light: rgba(248, 244, 235, 0.85);
+    --text-dim: rgba(248, 244, 235, 0.3);
+    --cell: 18px;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--obsidian);
+    color: var(--text-light);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  /* ── Background Decorative Elements ── */
+
+  .bg-deco {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 169, 76, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(212, 169, 76, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .deco-line-top {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .deco-line-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to top, var(--gold), transparent);
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .side-deco {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 200px;
+    background: linear-gradient(to bottom, transparent, rgba(212, 169, 76, 0.12), transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .side-deco.left { left: 12px; }
+  .side-deco.right { right: 12px; }
+
+  /* ── App Container ── */
+
+  .app {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px env(safe-area-inset-bottom, 16px);
+  }
+
+  /* ── Header ── */
+
+  .header {
+    text-align: center;
+    padding: 8px 0 20px;
+    opacity: 0;
+    animation: decoReveal 1s ease-out 0.2s forwards;
+  }
+
+  .deco-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .ornament-line {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .ornament-diamond {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    opacity: 0.5;
+  }
+
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: 10px;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(212, 169, 76, 0.2);
+  }
+
+  .subtitle {
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── Sound Button ── */
+
+  .sound-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    background: var(--charcoal);
+    border: 1px solid rgba(212, 169, 76, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    color: var(--text-dim);
+    padding: 0;
+  }
+
+  .sound-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ── Score Display ── */
+
+  .score-display {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 16px;
+    border: 1px solid rgba(212, 169, 76, 0.1);
+    position: relative;
+    opacity: 0;
+    animation: decoReveal 1s ease-out 0.4s forwards;
+  }
+
+  .score-corner-tl {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid var(--gold);
+    border-left: 1px solid var(--gold);
+    opacity: 0.3;
+  }
+
+  .score-corner-br {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid var(--gold);
+    border-right: 1px solid var(--gold);
+    opacity: 0.3;
+  }
+
+  .score-section {
+    flex: 1;
+    padding: 14px 16px;
+    text-align: center;
+    position: relative;
+  }
+
+  .score-divider {
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: rgba(212, 169, 76, 0.1);
+  }
+
+  .score-section.featured {
+    background: rgba(212, 169, 76, 0.04);
+  }
+
+  .score-label {
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .score-value {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--text-light);
+    transition: transform 0.15s ease-out;
+  }
+
+  .score-section.featured .score-value {
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212, 169, 76, 0.15);
+  }
+
+  /* ── Game Container & Frame ── */
+
+  .game-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    opacity: 0;
+    animation: decoReveal 1.2s ease-out 0.6s forwards;
+  }
+
+  .game-frame {
+    position: relative;
+    padding: 3px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark), var(--gold), var(--gold-dark));
+    background-size: 200% 200%;
+    animation: goldShimmer 6s ease-in-out infinite;
+  }
+
+  @keyframes goldShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .game-frame-inner {
+    padding: 8px;
+    background: var(--obsidian);
+  }
+
+  .game-board {
+    position: relative;
+    width: calc(18 * var(--cell));
+    height: calc(18 * var(--cell));
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .deco-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(212, 169, 76, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212, 169, 76, 0.03) 1px, transparent 1px);
+    background-size: var(--cell) var(--cell);
+    pointer-events: none;
+  }
+
+  .board-corner-deco {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    opacity: 0.08;
+  }
+
+  .board-corner-deco.tl { top: 0; left: 0; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+  .board-corner-deco.tr { top: 0; right: 0; border-top: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+  .board-corner-deco.bl { bottom: 0; left: 0; border-bottom: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+  .board-corner-deco.br { bottom: 0; right: 0; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+
+  /* ── Overlay ── */
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(14, 14, 18, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    z-index: 20;
+  }
+
+  .overlay.visible {
+    display: flex;
+  }
+
+  .overlay-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 24px;
+    color: var(--gold);
+    letter-spacing: 8px;
+  }
+
+  .overlay-subtitle {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+  }
+
+  .overlay-score {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 36px;
+    color: var(--gold);
+  }
+
+  .overlay-record {
+    color: var(--gold);
+    animation: goldPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes goldPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  /* ── Rank Bar ── */
+
+  .rank-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 14px 0 10px;
+    opacity: 0;
+    animation: decoReveal 1s ease-out 0.75s forwards;
+  }
+
+  .rank-label {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--gold);
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+
+  .rank-track {
+    flex: 1;
+    height: 2px;
+    background: rgba(212, 169, 76, 0.08);
+    position: relative;
+  }
+
+  .rank-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    box-shadow: 0 0 8px rgba(212, 169, 76, 0.3);
+    transition: width 0.3s ease-out, opacity 0.3s, box-shadow 0.3s;
+  }
+
+  .rank-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    transition: transform 0.3s ease-out;
+  }
+
+  /* ── Controls ── */
+
+  .controls {
+    padding: 12px 0 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    animation: decoReveal 1s ease-out 0.85s forwards;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .ctrl-btn {
+    width: 62px;
+    height: 62px;
+    background: var(--charcoal);
+    border: 1px solid rgba(212, 169, 76, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-dim);
+    position: relative;
+    padding: 0;
+  }
+
+  .ctrl-inner-border {
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(212, 169, 76, 0.04);
+    pointer-events: none;
+  }
+
+  .ctrl-btn:active {
+    background: rgba(212, 169, 76, 0.08);
+    border-color: rgba(212, 169, 76, 0.25);
+    transform: scale(0.93);
+    color: var(--gold);
+  }
+
+  .ctrl-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.5;
+    transition: all 0.2s ease;
+  }
+
+  .ctrl-btn.spacer {
+    visibility: hidden;
+  }
+
+  /* ── Bottom Bar ── */
+
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 4px;
+    opacity: 0;
+    animation: decoReveal 1s ease-out 1s forwards;
+  }
+
+  /* ── Deco Buttons ── */
+
+  .deco-btn {
+    padding: 10px 28px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .deco-btn.gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--obsidian);
+    box-shadow: 0 4px 15px rgba(212, 169, 76, 0.25);
+  }
+
+  .deco-btn.gold:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(212, 169, 76, 0.4);
+  }
+
+  .deco-btn.ghost {
+    background: none;
+    border: 1px solid rgba(212, 169, 76, 0.15);
+    color: var(--text-dim);
+  }
+
+  .deco-btn.ghost:active {
+    border-color: rgba(212, 169, 76, 0.3);
+    color: var(--gold);
+  }
+
+  /* ── Menu Screen ── */
+
+  .menu-record {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--gold);
+    opacity: 0.6;
+    text-align: center;
+    padding: 16px 0;
+  }
+
+  .menu-play-btn {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ── Snake Segments ── */
+
+  .snake-segment {
+    position: absolute;
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gem {
+    border-radius: 3px;
+    transition: all 0.1s ease;
+  }
+
+  .snake-segment.head .gem {
+    width: calc(var(--cell) - 2px);
+    height: calc(var(--cell) - 2px);
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+    box-shadow:
+      0 0 8px rgba(212, 169, 76, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .snake-segment.body .gem {
+    width: calc(var(--cell) - 4px);
+    height: calc(var(--cell) - 4px);
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    box-shadow: 0 0 4px rgba(212, 169, 76, 0.2);
+  }
+
+  .snake-segment.tail .gem {
+    width: calc(var(--cell) - 7px);
+    height: calc(var(--cell) - 7px);
+    border-radius: 50%;
+    background: var(--gold-dark);
+    opacity: 0.4;
+  }
+
+  /* ── Food ── */
+
+  .food {
+    position: absolute;
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ruby {
+    width: calc(var(--cell) - 4px);
+    height: calc(var(--cell) - 4px);
+    background: linear-gradient(135deg, var(--ruby), var(--burgundy));
+    border-radius: 50%;
+    box-shadow:
+      0 0 10px rgba(212, 68, 68, 0.4),
+      0 0 25px rgba(212, 68, 68, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    animation: rubyGlow 2.5s ease-in-out infinite;
+  }
+
+  @keyframes rubyGlow {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 10px rgba(212, 68, 68, 0.4), 0 0 25px rgba(212, 68, 68, 0.15), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    50% {
+      transform: scale(1.08);
+      box-shadow: 0 0 14px rgba(212, 68, 68, 0.5), 0 0 35px rgba(212, 68, 68, 0.2), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+  }
+
+  /* ── Animations ── */
+
+  @keyframes decoReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+
+  @media (max-height: 700px) {
+    .score-section { padding: 10px 12px; }
+    .score-value { font-size: 20px; }
+    .ctrl-btn { width: 54px; height: 54px; }
+    .controls { padding: 8px 0 4px; }
+    .rank-bar { margin: 8px 0 6px; }
+  }
+
+  @media (min-width: 421px) {
+    :root { --cell: 22px; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-deco"></div>
+  <div class="deco-line-top"></div>
+  <div class="deco-line-bottom"></div>
+  <div class="side-deco left"></div>
+  <div class="side-deco right"></div>
+
+  <div class="app">
+    <button class="sound-btn" id="soundBtn" aria-label="Toggle sound">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </button>
+
+    <!-- ═══════════ MENU SCREEN ═══════════ -->
+    <div id="menuScreen" style="display: flex; flex-direction: column; flex: 1;">
+      <div class="header">
+        <div class="deco-ornament">
+          <span class="ornament-line"></span>
+          <span class="ornament-diamond"></span>
+          <span class="ornament-line"></span>
+        </div>
+        <div class="title">AUREUM</div>
+        <div class="subtitle">SERPENTIS LUDUS</div>
+      </div>
+
+      <!-- Decorative empty game board -->
+      <div class="game-container">
+        <div class="game-frame">
+          <div class="game-frame-inner">
+            <div class="game-board">
+              <div class="deco-grid"></div>
+              <div class="board-corner-deco tl"></div>
+              <div class="board-corner-deco tr"></div>
+              <div class="board-corner-deco bl"></div>
+              <div class="board-corner-deco br"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-record" id="menuRecord">Record: 0</div>
+      <div class="menu-play-btn">
+        <button class="deco-btn gold" id="menuPlayBtn">PLAY</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ GAME SCREEN ═══════════ -->
+    <div id="gameScreen" style="display: none; flex-direction: column; flex: 1;">
+
+      <!-- Score Display Bar -->
+      <div class="score-display">
+        <div class="score-corner-tl"></div>
+        <div class="score-corner-br"></div>
+        <div class="score-section featured">
+          <div class="score-label">Score</div>
+          <div class="score-value" id="scoreValue">0</div>
+        </div>
+        <div class="score-section">
+          <div class="score-divider"></div>
+          <div class="score-label">Record</div>
+          <div class="score-value" id="recordValue">0</div>
+        </div>
+        <div class="score-section">
+          <div class="score-divider"></div>
+          <div class="score-label">Chain</div>
+          <div class="score-value" id="chainValue">3</div>
+        </div>
+      </div>
+
+      <!-- Game Board -->
+      <div class="game-container">
+        <div class="game-frame">
+          <div class="game-frame-inner">
+            <div class="game-board" id="gameBoard">
+              <div class="deco-grid"></div>
+              <div class="board-corner-deco tl"></div>
+              <div class="board-corner-deco tr"></div>
+              <div class="board-corner-deco bl"></div>
+              <div class="board-corner-deco br"></div>
+
+              <!-- Overlay -->
+              <div class="overlay" id="overlay">
+                <div class="overlay-title" id="overlayTitle">PAUSED</div>
+                <div class="overlay-subtitle" id="overlaySubtitle">TAKE A BREATH</div>
+                <div class="overlay-score" id="overlayScore"></div>
+                <div class="overlay-record" id="overlayRecord"></div>
+                <button class="deco-btn gold" id="overlayBtnPrimary">RESUME</button>
+                <button class="deco-btn ghost" id="overlayBtnSecondary">QUIT</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rank Bar -->
+      <div class="rank-bar">
+        <span class="rank-label">Rank</span>
+        <div class="rank-track">
+          <div class="rank-fill" id="rankFill"></div>
+        </div>
+        <span class="rank-title" id="rankTitle">I</span>
+      </div>
+
+      <!-- D-Pad Controls -->
+      <div class="controls">
+        <div class="controls-row">
+          <div class="ctrl-btn spacer"></div>
+          <button class="ctrl-btn" data-dir="up" aria-label="Up">
+            <span class="ctrl-inner-border"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <div class="ctrl-btn spacer"></div>
+        </div>
+        <div class="controls-row">
+          <button class="ctrl-btn" data-dir="left" aria-label="Left">
+            <span class="ctrl-inner-border"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="ctrl-btn" data-dir="down" aria-label="Down">
+            <span class="ctrl-inner-border"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="ctrl-btn" data-dir="right" aria-label="Right">
+            <span class="ctrl-inner-border"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="bottom-bar">
+        <button class="deco-btn ghost" id="pauseBtn">PAUSE</button>
+        <button class="deco-btn gold" id="playBtn">PLAY</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
